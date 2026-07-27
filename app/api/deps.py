@@ -11,7 +11,7 @@ from fastapi.security import OAuth2PasswordBearer
 # app
 from app.core.security import SECRET_KEY, ALGORITHM
 from app.models.user import User
-from app.schemas.user import TokenData
+from app.schemas.token import TokenData
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
