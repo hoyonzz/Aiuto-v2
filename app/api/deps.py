@@ -14,7 +14,7 @@ from app.models.user import User
 from app.schemas.token import TokenData
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/v1/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./aiuto_v2.db"
