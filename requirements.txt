@@ -7,3 +7,4 @@ argon2-cffi
 python-multipart
 sqlalchemy
 alembic
+pydantic-settings>=2.6

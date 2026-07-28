@@ -4,6 +4,13 @@ from argon2.exceptions import VerifyMismatchError
 import jwt
 from datetime import datetime, timezone, timedelta
 
+from app.core.config import get_settings
+
+settings = get_settings()
+
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 
 ph = PasswordHasher()
@@ -21,15 +28,15 @@ def verify_password(plain_password: str, stored_hash: str) -> bool:
     except VerifyMismatchError:
         return False
 
-SECRET_KEY = "aiuto_v2_super_secret_key_for_development"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 # jwt토큰 굽는 함수
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+# jwt토큰 해독 함수
+def decode_token(token: str) -> dict:
+    return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
