@@ -22,6 +22,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
+    # FastAPI 앱 본체에서 사용할 비동기 접속 URL(asyncpg)
     @property
     def database_url(self) -> str:
         return (
@@ -29,6 +30,16 @@ class Settings(BaseSettings):
             f"{self.postgres_user}:{self.postgres_password}"
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
+
+    # Alembic 마이그레이션에서 사용할 동기 접속 URL(psycopg)
+    @property
+    def database_sync_url(self) -> str:
+        return (
+            f"postgresql+psycopg://"
+            f"{self.postgres_user}:{self.postgres_password}"
+            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
+        )
+
 
 @lru_cache
 def get_settings() -> Settings:

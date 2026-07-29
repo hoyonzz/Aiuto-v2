@@ -1,63 +1,50 @@
-import jwt
-
-# sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+import jwt, uuid
 
 # fastapi
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
+# SQLALCHEMY
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 # app
-from app.core.security import SECRET_KEY, ALGORITHM
 from app.models.user import User
-from app.schemas.token import TokenData
+from app.core.security import decode_token
+from app.core.db import get_db
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./aiuto_v2.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db():
-    # 1. DB 연결 통로 열기
-    db = SessionLocal()
-    try:
-        # 라우터 함수에게 장부 빌려주기
-        yield db
-    finally:
-        db.close()
-
-def get_current_user(
+async def get_current_user(
         token: str = Depends(oauth2_scheme), 
-        db: Session = Depends(get_db)
-    ):
+        db: AsyncSession = Depends(get_db)
+    ) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="인증 정보가 올바르지 않습니다.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
+        payload = decode_token(token)
 
-        if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="토큰에 이메일 정보가 없습니다."
-            )
-        token_data = TokenData(email=email)
+        if payload.get("type") != "access":
+            raise credentials_exception
 
-    except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="토큰이 만료되었거나 올바르지 않습니다.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        sub = payload.get("sub")
+        if not sub:
+            raise credentials_exception
 
-    user = db.query(User).filter(User.email == token_data.email).first()
+        user_id = uuid.UUID(str(sub))
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="인증되지 않은 유저입니다."
-        )
+    except (jwt.PyJWTError, ValueError):
+        raise credentials_exception
+
+    result = await db.execute(select(User).where(User.id==user_id))
+    user = result.scalar_one_or_none()
+
+    if not user or not user.is_active:
+        raise credentials_exception
 
     return user

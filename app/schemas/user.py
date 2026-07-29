@@ -1,3 +1,4 @@
+import uuid
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, model_validator
 
 
@@ -15,7 +16,7 @@ class UserCreate(BaseModel):
 
 # 응답 전용 스키마(서버 -> 클라이언트)
 class UserResponse(BaseModel):
-    id: int
+    id: uuid.UUID
     email: str
 
     model_config = ConfigDict(from_attributes=True)
