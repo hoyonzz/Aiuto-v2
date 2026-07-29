@@ -222,3 +222,5 @@ __marimo__/
 # db
 *.db
 *.db-journal
+
+archive/
