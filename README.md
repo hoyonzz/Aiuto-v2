@@ -22,3 +22,32 @@ Aiuto프로젝트 v2개발 레포지토리입니다.
 
 > 아키텍처 다이어그램, 실행 방법, API 명세, 설계 결정은
 > 핵심 파이프라인 완성 후 추가 예정.
+
+```
+Aiuto-v2
+├─ aiuto_v2.db
+├─ app
+│  ├─ api
+│  │  ├─ deps.py
+│  │  ├─ v1
+│  │  │  ├─ endpoints
+│  │  │  │  ├─ auth.py
+│  │  │  │  └─ __init__.py
+│  │  │  └─ __init__.py
+│  │  └─ __init__.py
+│  ├─ core
+│  │  ├─ security.py
+│  │  └─ __init__.py
+│  ├─ main.py
+│  ├─ models
+│  │  ├─ user.py
+│  │  └─ __init__.py
+│  ├─ schemas
+│  │  ├─ token.py
+│  │  ├─ user.py
+│  │  └─ __init__.py
+│  └─ __init__.py
+├─ README.md
+└─ requirements.txt
+
+```
