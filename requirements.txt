@@ -9,5 +9,6 @@ sqlalchemy
 alembic
 pydantic-settings>=2.6
 psycopg[binary]>=3.3.4
-alembic >=1.18.5
+alembic>=1.18.5
 asyncpg>=0.30
+google-genai>=2.16.0

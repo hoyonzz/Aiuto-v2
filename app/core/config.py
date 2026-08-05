@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
     postgres_db: str
 
+    gemini_api_key: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
