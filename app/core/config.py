@@ -17,7 +17,9 @@ class Settings(BaseSettings):
     postgres_db: str
 
     gemini_api_key: str
+    nvidia_api_key: str | None = None
 
+    llm_chain: str
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
