@@ -1,6 +1,4 @@
-from google import genai
-from google.genai import types
-from google.genai.errors import APIError
+from openai import OpenAI, APIError, APIConnectionError, RateLimitError
 
 from pydantic import ValidationError
 
@@ -8,17 +6,22 @@ from app.worker.llm.base import ClassificationResult, TransientLLMError, Permane
 
 
 
-class GeminiClient:
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite"):
-        self.client = genai.Client(
-            api_key=api_key,
+class NvidiaClient:
+    def __init__(
+        self,
+        api_key: str,
+        model: str = ""
+    ):
+        self.client = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=api_key
         )
         self.model = model
-        
 
     def classify(
             self,
-            prompt: str, now_iso: str,
+            prompt: str,
+            now_iso: str,
             timezone: str
     ) -> ClassificationResult:
         system_instruction = f"""
@@ -40,29 +43,29 @@ class GeminiClient:
         """
 
         try:
-            response = self.client.models.generate_content(
+            json_schema = ClassificationResult.model_json_schema()
+            response = self.client.chat.completions.create(
                 model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
-                    response_mime_type="application/json",
-                    response_schema=ClassificationResult,
-                    thinking_config=types.ThinkingConfig(thinking_level="minimal"),
-                    temperature=0.1,
-                ),
+                messages=[
+                    {"role": "system", "content": system_instruction},
+                    {"role":"user", "content": prompt}
+                ],
+                temperature=0.1,
+                extra_body={"nvext": {"guided_json": json_schema}}
             )
-            return response.parsed
-    
+            raw_json = response.choices[0].message.content
+            return ClassificationResult.model_validate_json(raw_json)
+
+        except (RateLimitError, APIConnectionError) as e:
+            raise TransientLLMError(str(e)) from e
+
         except APIError as e:
-            if e.code in (429, 500, 502, 503, 504):
-                raise TransientLLMError(f"Gemini 일시적 오류 [{e.code}]: {e}") from e
+            if e.status_code in (429, 500, 502, 503, 504):
+                raise TransientLLMError(f"Nvidia 일시적 오류 [{e.status_code}]: {e}") from e
             raise PermanentLLMError(
-                f"Gemini API 영구적 오류 ({e.code}): {e}"
+                f"Nvidia 영구적 오류 [{e.status_code}]: {e}"
             ) from e
 
         except ValidationError as e:
-            raise TransientLLMError(f"Gemini output parsing failed: {e}") from e
-    
-
-
-
+            raise TransientLLMError(f"Nvidia output parsing failed: {e}") from e
+            
