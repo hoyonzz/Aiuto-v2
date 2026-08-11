@@ -53,9 +53,24 @@ class NvidiaClient:
                 temperature=0.1,
                 extra_body={"nvext": {"guided_json": json_schema}}
             )
-            raw_json = response.choices[0].message.content
-            return ClassificationResult.model_validate_json(raw_json)
 
+            choice = response.choices[0] if response.choices else None
+            finish_reason = str(getattr(choice, "finish_reason", "")).upper() if choice else ""
+
+            if finish_reason in ("STOP", "LENGTH"):
+                raw_json = choice.message.content if choice and choice.message else None
+
+                if raw_json is None:
+                    raise TransientLLMError("Nvidia 응답 내용 유실 (content is None)")
+
+                try:
+                    return ClassificationResult.model_validate_json(raw_json)
+                except (ValidationError, TypeError) as e:
+                    raise TransientLLMError(f"Nvidia output parsing failed: {e}") from e
+
+            else:
+                raise PermanentLLMError(f"Nvidia 콘텐츠/정책 차단 또는 비정상 종료 (finish_reason: {finish_reason})")
+            
         except (RateLimitError, APIConnectionError) as e:
             raise TransientLLMError(str(e)) from e
 
