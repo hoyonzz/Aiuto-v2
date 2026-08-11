@@ -51,8 +51,18 @@ class GeminiClient:
                     temperature=0.1,
                 ),
             )
-            return response.parsed
-    
+            if response.parsed is not None:
+                return response.parsed
+            
+            candidate = response.candidates[0] if response.candidates else None
+            finish_reason_str = str(getattr(candidate, "finish_reason", "")).upper()
+
+            if "STOP" in finish_reason_str or "MAX_TOKENS" in finish_reason_str:
+                raise TransientLLMError("Gemini 응답 파싱 실패")
+
+            else:
+                raise PermanentLLMError(f"Gemini 콘텐츠/정책 차단: {finish_reason_str}")
+
         except APIError as e:
             if e.code in (429, 500, 502, 503, 504):
                 raise TransientLLMError(f"Gemini 일시적 오류 [{e.code}]: {e}") from e
