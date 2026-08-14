@@ -3,7 +3,12 @@ from pydantic import BaseModel, Field
 
 
 
-# 1. ClassificationResult Pydantic 스키마 정의
+class ExtractedData(BaseModel):
+    title: str|None = Field(default=None, max_length=30)
+    start_at: str|None = None
+    content: str|None = None
+    topic: str|None = None
+
 class ClassificationResult(BaseModel):
 
     intent: Literal["task", "schedule", "memo", "research"]
@@ -11,9 +16,8 @@ class ClassificationResult(BaseModel):
         ge=0.0,
         le=1.0
     )
-    extracted: dict
+    extracted: ExtractedData
 
-# 2. LLMClient 클래스
 class LLMClient(Protocol):
     def classify(
         self,

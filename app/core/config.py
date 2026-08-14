@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     gemini_api_key: str
     nvidia_api_key: str | None = None
 
-    llm_chain: str
+    llm_chain: str = (
+        "gemini:gemini-3.5-flash-lite,nvidia:meta/llama-3.3-70b-instruct"
+    )
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
