@@ -20,6 +20,7 @@ def show(label: str, result) -> None:
     print(f"\n[{label}] intent: {result.intent} | confidence: {result.confidence}")
     print(f"  title: {result.extracted.title!r} (길이: {len(result.extracted.title or '')})")
     print(f"  start_at: {result.extracted.start_at}")
+    print(f"  due_date: {result.extracted.due_date}")   # ← 여기로 이동
     print(f"  content: {result.extracted.content}")
     print(f"  topic: {result.extracted.topic}")
 
@@ -71,5 +72,11 @@ res8 = client.classify(
 show("8 title 길이 스트레스", res8)
 assert res8.intent == "schedule"
 assert res8.extracted.start_at is not None
+
+# 9) task + due_date
+res9 = client.classify("다음주 화요일까지 세미나 자료 준비", now_iso=now_iso, timezone="Asia/Seoul")
+show("9 due_date", res9)
+assert res9.intent == "task"
+assert res9.extracted.start_at is None
 
 print("\n✅ 1·2·3·4·5·8 assert 통과 (6·7은 관찰용, 위 출력을 직접 확인하세요)")

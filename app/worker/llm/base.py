@@ -8,6 +8,7 @@ class ExtractedData(BaseModel):
     start_at: str|None = None
     content: str|None = None
     topic: str|None = None
+    due_date: str | None = Field(default=None, max_length=10)
 
 class ClassificationResult(BaseModel):
 

@@ -1,6 +1,7 @@
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
+import httpx
 
 from pydantic import ValidationError
 
@@ -38,6 +39,13 @@ class GeminiClient:
         - 절대 UTC로 변환하지 마라. 시간대 계산을 하지 말고 그냥 표에 있는 날짜와 문장에 나온 시각을 이어붙이기만 해라.
         2. task: 시각은 없지만 해야 할 일 (예: "보고서 초안 작성해야 함")
         - extracted 객체에 title 포함할 것.
+        - 마감 기한이 언급되면 (예: "금요일까지") extracted 객체에 due_date도 포함할 것.
+            [날짜 참고표]를 참고해 해당 날짜를 "YYYY-MM-DD" 형식으로 적을 것.
+            시각은 포함하지 말 것. 마감 언급이 없으면 due_date는 비워둘것.
+        - 단, 마감과 함께 하루 중 고정된 시각(예: "자정", "오전 9시", "오후 5시")이
+            언급되면 이는 task가 아니라 schedule이다.
+        - "3시간 뒤"/"30분 뒤"처럼 지금으로부터의 상대적 시간 간격은 고정된 시각이
+            아니다. 이 경우 계산하지 말고 task로 분류하며, title에 원문 표현을 그대로 남길 것 (예: "3시간 뒤 전화하기").
         3. memo: 단순 기록/메모 (예: "오늘 회의 결정: 예산 300만")
         - extracted 객체에 content 포함할 것.
         4. research: 조사나 연구가 필요한 질문 (예: "파이썬 asyncio 알려줘")
@@ -74,7 +82,9 @@ class GeminiClient:
 
             else:
                 raise PermanentLLMError(f"Gemini 콘텐츠/정책 차단: {finish_reason_str}")
-
+        except (httpx.TimeoutException, httpx.NetworkError, httpx.ProxyError) as e:
+            raise TransientLLMError(f"Gemini 네트워크 오류: {e}") from e
+        
         except APIError as e:
             if e.code in (429, 500, 502, 503, 504):
                 raise TransientLLMError(f"Gemini 일시적 오류 [{e.code}]: {e}") from e
