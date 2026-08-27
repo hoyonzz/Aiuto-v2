@@ -23,7 +23,7 @@ class Task(Base, UUIDPrimaryKeyMixin, TimeStampMixin):
         sa.Date, nullable=True
     )
     status: Mapped[TaskStatus] = mapped_column(
-        sa.Enum(TaskStatus, native_enum=False, length=20),
+        sa.Enum(TaskStatus, native_enum=False, create_constraint=True, length=20),
         nullable=False,
         default=TaskStatus.TODO,
     )

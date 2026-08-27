@@ -1,8 +1,8 @@
 """create worker domain models and ai_jobs
 
-Revision ID: 226ecece29b1
+Revision ID: 230f167851f1
 Revises: acbf044165b1
-Create Date: 2026-08-25 17:18:26.068033
+Create Date: 2026-08-26 00:53:24.069293
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '226ecece29b1'
+revision: str = '230f167851f1'
 down_revision: Union[str, Sequence[str], None] = 'acbf044165b1'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -24,8 +24,8 @@ def upgrade() -> None:
     op.create_table('ai_jobs',
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('raw_text', sa.Text(), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'PROCESSING', 'SUCCESS', 'FAILED', name='aijobstatus', native_enum=False, length=20), nullable=False),
-    sa.Column('intent', sa.Enum('TASK', 'SCHEDULE', 'MEMO', 'RESEARCH', name='intent', native_enum=False, length=20), nullable=True),
+    sa.Column('status', sa.Enum('PENDING', 'PROCESSING', 'SUCCESS', 'FAILED', name='aijobstatus', native_enum=False, create_constraint=True, length=20), nullable=False),
+    sa.Column('intent', sa.Enum('TASK', 'SCHEDULE', 'MEMO', 'RESEARCH', name='intent', native_enum=False, create_constraint=True, length=20), nullable=True),
     sa.Column('result_ref_type', sa.String(length=50), nullable=True),
     sa.Column('result_ref_id', sa.Uuid(), nullable=True),
     sa.Column('model_used', sa.String(length=100), nullable=True),
@@ -66,7 +66,7 @@ def upgrade() -> None:
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('title', sa.String(length=255), nullable=False),
     sa.Column('due_date', sa.Date(), nullable=True),
-    sa.Column('status', sa.Enum('TODO', 'IN_PROGRESS', 'DONE', name='taskstatus', native_enum=False, length=20), nullable=False),
+    sa.Column('status', sa.Enum('TODO', 'IN_PROGRESS', 'DONE', name='taskstatus', native_enum=False, create_constraint=True, length=20), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),

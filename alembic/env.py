@@ -11,7 +11,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.config import get_settings
-from app.models.base import Base
 
 # app/models
 from app.models.ai_job import AiJob
@@ -20,8 +19,6 @@ from app.models.memo import Memo
 from app.models.schedule import Schedule
 from app.models.task import Task
 from app.models.user import User
-
-target_metadata = Base.metadata
 
 
 settings = get_settings()

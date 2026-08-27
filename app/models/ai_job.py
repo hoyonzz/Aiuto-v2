@@ -18,12 +18,12 @@ class AiJob(Base, UUIDPrimaryKeyMixin, TimeStampMixin):
     )
     raw_text: Mapped[str] = mapped_column(sa.Text, nullable=False)
     status: Mapped[AiJobStatus] = mapped_column(
-        sa.Enum(AiJobStatus, native_enum=False, length=20),
+        sa.Enum(AiJobStatus, native_enum=False, create_constraint=True, length=20),
         nullable=False,
         default=AiJobStatus.PENDING,
     )
     intent: Mapped[Intent | None] = mapped_column(
-        sa.Enum(Intent, native_enum=False, length=20), nullable=True
+        sa.Enum(Intent, native_enum=False, create_constraint=True, length=20), nullable=True
     )
     result_ref_type: Mapped[str | None] = mapped_column(
         sa.String(50), nullable=True
