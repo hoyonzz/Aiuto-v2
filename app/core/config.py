@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     postgres_port: int = 5432
     postgres_db: str
 
+    # redis 필드
+    redis_host: str
+    redis_port: int = 6379
+    redis_db: int = 0
+
     gemini_api_key: str
     nvidia_api_key: str | None = None
 
@@ -46,6 +51,12 @@ class Settings(BaseSettings):
             f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
         )
 
+    @property
+    def redis_url(self) -> str:
+        return(
+            f"redis://"
+            f"{self.redis_host}:{self.redis_port}/{self.redis_db}"
+        )
 
 @lru_cache
 def get_settings() -> Settings:
