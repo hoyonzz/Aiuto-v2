@@ -126,7 +126,6 @@ def process_ingest_task(job_id: str) -> None:
 
             created_entity = Memo(
                 user_id=job.user_id,
-                title=entity_title,
                 content=memo_content
             )
 
@@ -151,3 +150,4 @@ def process_ingest_task(job_id: str) -> None:
             f"[태스크 성공] job_id={job_id}, intent={job.intent}, "
             f"ref_type={job.result_ref_type}, ref_id={job.result_ref_id}"
         )
+        

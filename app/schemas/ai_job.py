@@ -62,3 +62,4 @@ class JobStatusResponse(BaseModel):
         ...,
         description="작업 상태 최종 변경 일시",
     )
+    
