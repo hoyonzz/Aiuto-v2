@@ -24,6 +24,7 @@ from datetime import datetime, date
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_USER_TIMEZONE = ZoneInfo("Asia/Seoul")
 
 @celery_app.task(name="app.worker.tasks.dummy_task")
 def dummy_task(message: str) -> dict:
@@ -58,15 +59,14 @@ def process_ingest_task(job_id: str) -> None:
             logger.warning(f"유저를 찾을 수 없습니다: {job.user_id}")
             return
 
-        user_tz = getattr(user, "timezone", None) or "Asia/Seoul"
-        now_iso = datetime.now(ZoneInfo(user_tz)).isoformat()
+        now_iso = datetime.now(DEFAULT_USER_TIMEZONE).isoformat()
 
         try:
             client = get_llm_client()
             result = client.classify(
                 prompt=job.raw_text,
                 now_iso=now_iso,
-                timezone=user_tz
+                timezone=str(DEFAULT_USER_TIMEZONE)
             )
         except (TransientLLMError, PermanentLLMError) as e:
             job.status = AiJobStatus.FAILED
@@ -102,15 +102,7 @@ def process_ingest_task(job_id: str) -> None:
 
             if extracted.start_at:
                 logger.info(f"[LLM 원본 start_at 추출값]: {extracted.start_at}")
-
-                raw_start = extracted.start_at.replace("Z", "+00:00")
-                parsed_dt = datetime.fromisoformat(raw_start)
-
-                if parsed_dt.tzinfo is not None:
-                    start_at_utc = parsed_dt.astimezone(ZoneInfo("UTC"))
-                else:
-                    local_dt_with_tz = parsed_dt.replace(tzinfo=ZoneInfo(user_tz))
-                    start_at_utc = local_dt_with_tz.astimezone(ZoneInfo("UTC"))
+                start_at_utc = datetime.fromisoformat(extracted.start_at.replace("Z", "+00:00"))
             else:
                 start_at_utc = datetime.now(ZoneInfo("UTC"))
 
