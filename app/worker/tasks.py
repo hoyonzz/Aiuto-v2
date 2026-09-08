@@ -58,10 +58,7 @@ def process_ingest_task(job_id: str) -> None:
             logger.warning(f"유저를 찾을 수 없습니다: {job.user_id}")
             return
 
-        if user.timezone:
-            user_tz = user.timezone
-        else:
-            user_tz = "Asia/Seoul"
+        user_tz = getattr(user, "timezone", None) or "Asia/Seoul"
         now_iso = datetime.now(ZoneInfo(user_tz)).isoformat()
 
         try:
