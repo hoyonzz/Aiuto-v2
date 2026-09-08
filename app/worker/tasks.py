@@ -101,9 +101,16 @@ def process_ingest_task(job_id: str) -> None:
             ref_type = "schedule"
 
             if extracted.start_at:
-                local_dt = datetime.fromisoformat(extracted.start_at)
-                local_dt_with_tz = local_dt.replace(tzinfo=ZoneInfo(user_tz))
-                start_at_utc = local_dt_with_tz.astimezone(ZoneInfo("UTC"))
+                logger.info(f"[LLM 원본 start_at 추출값]: {extracted.start_at}")
+
+                raw_start = extracted.start_at.replace("Z", "+00:00")
+                parsed_dt = datetime.fromisoformat(raw_start)
+
+                if parsed_dt.tzinfo is not None:
+                    start_at_utc = parsed_dt.astimezone(ZoneInfo("UTC"))
+                else:
+                    local_dt_with_tz = parsed_dt.replace(tzinfo=ZoneInfo(user_tz))
+                    start_at_utc = local_dt_with_tz.astimezone(ZoneInfo("UTC"))
             else:
                 start_at_utc = datetime.now(ZoneInfo("UTC"))
 
@@ -141,7 +148,8 @@ def process_ingest_task(job_id: str) -> None:
         job.intent = Intent(result.intent)
         job.result_ref_type = ref_type
         job.result_ref_id = ref_id
-        job.model_used = "gemini-3.5-flash-lite"
+
+        job.model_used = getattr(result, "model_name", None) or "gemini-3.5-flash-lite"
 
         logger.info(
             f"[태스크 성공] job_id={job_id}, intent={job.intent}, "
