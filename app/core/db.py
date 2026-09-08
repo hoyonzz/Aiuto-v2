@@ -45,5 +45,9 @@ def get_sync_db() -> Generator[Session, None, None]:
     db = SyncSessionLocal()
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

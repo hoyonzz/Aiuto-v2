@@ -18,6 +18,9 @@ class ClassificationResult(BaseModel):
         le=1.0
     )
     extracted: ExtractedData
+    model_used: str | None = Field(
+        default=None
+    )
 
 class LLMClient(Protocol):
     def classify(
