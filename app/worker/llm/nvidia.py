@@ -85,6 +85,8 @@ class NvidiaClient:
 
                 if result.extracted.start_at is not None:
                     result.extracted.start_at = to_utc_iso(result.extracted.start_at, timezone)
+
+                result.model_used = self.model
                 return result
             else:
                 raise PermanentLLMError(f"Nvidia 콘텐츠/정책 차단 또는 비정상 종료 (finish_reason: {finish_reason})")

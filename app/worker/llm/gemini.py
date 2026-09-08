@@ -72,6 +72,8 @@ class GeminiClient:
                 result = response.parsed
                 if result.extracted.start_at is not None:
                     result.extracted.start_at = to_utc_iso(result.extracted.start_at, timezone)
+                result.model_used = self.model
+                
                 return result
             
             candidate = response.candidates[0] if response.candidates else None
