@@ -5,8 +5,7 @@ email-validator
 pyjwt
 argon2-cffi
 python-multipart
-sqlalchemy
-alembic
+sqlalchemy>=2.0
 pydantic-settings>=2.6
 psycopg[binary]>=3.3.4
 alembic>=1.18.5

@@ -1,6 +1,9 @@
 import logging
 import uuid
 
+# SQLAlchemy
+from sqlalchemy import update
+
 # app
 from app.core.db import get_sync_db
 from app.enums import AiJobStatus, Intent
@@ -40,38 +43,42 @@ def process_ingest_task(job_id: str) -> None:
         return
 
     with get_sync_db() as session:
+        stmt = (
+            update(AiJob)
+            .where(AiJob.id == parsed_job_id, AiJob.status == AiJobStatus.PENDING)
+            .values(status=AiJobStatus.PROCESSING)
+            .returning(AiJob.raw_text)
+        )
+        row = session.execute(stmt).one_or_none()
+
+        if not row:
+            logger.warning(f"[중복 실행 방어] 선점 실패(이미 처리 중이거나 완료됨): {job_id}")
+            return
+
+        raw_text = row.raw_text
+
+    now_iso = datetime.now(DEFAULT_USER_TIMEZONE).isoformat()
+
+    try:
+        client = get_llm_client()
+        result = client.classify(
+            prompt=raw_text,
+            now_iso=now_iso,
+            timezone=str(DEFAULT_USER_TIMEZONE)
+        )
+    except (TransientLLMError, PermanentLLMError) as e:
+        with get_sync_db() as session:
+            failed_job = session.get(AiJob, parsed_job_id)
+            if failed_job:
+                failed_job.status = AiJobStatus.FAILED
+                failed_job.error = str(e)
+        logger.error(f"요청사항 AI 분석 실패: {e}")
+        return
+
+    with get_sync_db() as session:
         job = session.get(AiJob, parsed_job_id)
         if not job:
             logger.warning(f"작업을 찾을 수 없습니다: {job_id}")
-            return
-
-        if job.status == AiJobStatus.SUCCESS:
-            logger.info(f"이미 처리 완료된 작업입니다: {job_id}")
-            return
-
-       
-        job.status = AiJobStatus.PROCESSING
-        session.flush()
-
-
-        user = session.get(User, job.user_id)
-        if not user:
-            logger.warning(f"유저를 찾을 수 없습니다: {job.user_id}")
-            return
-
-        now_iso = datetime.now(DEFAULT_USER_TIMEZONE).isoformat()
-
-        try:
-            client = get_llm_client()
-            result = client.classify(
-                prompt=job.raw_text,
-                now_iso=now_iso,
-                timezone=str(DEFAULT_USER_TIMEZONE)
-            )
-        except (TransientLLMError, PermanentLLMError) as e:
-            job.status = AiJobStatus.FAILED
-            job.error = str(e)
-            logger.error(f"요청사항 AI 분석 실패: {e}")
             return
 
         extracted = result.extracted
@@ -145,6 +152,7 @@ def process_ingest_task(job_id: str) -> None:
 
         logger.info(
             f"[태스크 성공] job_id={job_id}, intent={job.intent}, "
-            f"ref_type={job.result_ref_type}, ref_id={job.result_ref_id}"
+            f"ref_type={job.result_ref_type}, ref_id={job.result_ref_id},"
+            f"model_used={job.model_used}"
         )
         

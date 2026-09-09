@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     nvidia_api_key: str | None = None
 
     llm_chain: str = (
-        "gemini:gemini-3.5-flash-lite,nvidia:meta/llama-3.3-70b-instruct"
+        "gemini:gemini-3.5-flash-lite"
     )
     model_config = SettingsConfigDict(
         env_file=".env",
