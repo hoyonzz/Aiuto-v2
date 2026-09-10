@@ -148,7 +148,7 @@ def process_ingest_task(job_id: str) -> None:
         job.result_ref_type = ref_type
         job.result_ref_id = ref_id
 
-        job.model_used = getattr(result, "model_used", None) or "gemini-3.5-flash-lite"
+        job.model_used = result.model_used
 
         logger.info(
             f"[태스크 성공] job_id={job_id}, intent={job.intent}, "

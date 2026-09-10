@@ -11,7 +11,7 @@ from app.worker.llm.time_utils import build_date_anchors, to_utc_iso
 
 
 class GeminiClient:
-    def __init__(self, api_key: str, model: str = "gemini-3.5-flash-lite"):
+    def __init__(self, api_key: str, model: str):
         self.client = genai.Client(
             api_key=api_key,
         )

@@ -4,8 +4,8 @@ from zoneinfo import ZoneInfo
 
 
 def build_date_anchors(now_iso: str) -> str:
-    utc_dt = datetime.fromisoformat(now_iso)
-    kst_dt = utc_dt.astimezone(ZoneInfo("Asia/Seoul"))
+    dt = datetime.fromisoformat(now_iso)
+    kst_dt = dt.astimezone(ZoneInfo("Asia/Seoul"))
     today = kst_dt.date()
     tomorrow = today + timedelta(days=1)
     day_after = today + timedelta(days=2)
