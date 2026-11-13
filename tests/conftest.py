@@ -5,7 +5,12 @@ import pytest
 from alembic.config import Config
 from alembic import command
 import sqlalchemy as sa
-from app.core.db import sync_engine
+
+# app
+from app.core.db import sync_engine, get_sync_db
+from app.models.user import User
+from app.models.ai_job import AiJob
+from app.enums import AiJobStatus
 
 
 
@@ -23,3 +28,15 @@ def clean_db(migrated_db):
                 "TRUNCATE users, ai_jobs, memos, tasks, schedules CASCADE"
             )
         )
+
+@pytest.fixture
+def pending_job(clean_db):
+    with get_sync_db() as session:
+        user = User(email="job@test.com", password_hash="x")
+        session.add(user)
+        session.flush()
+        job = AiJob(user_id=user.id, raw_text="이번주 채용공고 지원 계획 점검", status=AiJobStatus.PENDING)
+        session.add(job)
+        session.flush()
+        job_id = str(job.id)
+    return job_id
