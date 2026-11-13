@@ -1,12 +1,12 @@
 import sqlalchemy as sa
 from app.core.db import get_sync_db, sync_engine
 from app.models.user import User
+from app.worker import tasks
 
 
 
 def test_engine_uses_test_db():
     test_database = sync_engine.url.database
-    print(test_database)
     assert test_database == "aiuto_test"
 
 def test_tables_exist(migrated_db):
@@ -37,3 +37,14 @@ def test_pending_job_is_committed(pending_job):
             "SELECT status FROM ai_jobs WHERE id = :id"
         ), {"id": pending_job}).scalar_one()
     assert result == "PENDING"
+
+def test_fake_llm_is_patched(fake_llm):
+    client = tasks.get_llm_client()
+    assert client is fake_llm
+    result = client.classify(
+        prompt="회의 메모",
+        now_iso="2026-11-13T09:00:00+09:00",
+        timezone="Asia/Seoul"
+    )
+    assert result.intent == "memo"
+    assert fake_llm.calls == 1

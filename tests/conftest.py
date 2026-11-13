@@ -11,6 +11,8 @@ from app.core.db import sync_engine, get_sync_db
 from app.models.user import User
 from app.models.ai_job import AiJob
 from app.enums import AiJobStatus
+from app.worker import tasks
+from app.worker.llm.base import ClassificationResult, ExtractedData
 
 
 
@@ -40,3 +42,20 @@ def pending_job(clean_db):
         session.flush()
         job_id = str(job.id)
     return job_id
+
+class FakeLLMClient:
+    def __init__(self):
+        self.calls = 0
+
+    def classify(self, prompt, now_iso, timezone):
+        self.calls += 1
+        result = ClassificationResult(intent="memo", confidence=0.9, extracted=ExtractedData(content=prompt), model_used="fake")
+        return result
+
+@pytest.fixture
+def fake_llm(monkeypatch):
+    fake = FakeLLMClient()
+    def give_fake():
+        return fake
+    monkeypatch.setattr(tasks, "get_llm_client", give_fake)
+    return fake
