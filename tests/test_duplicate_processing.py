@@ -38,6 +38,7 @@ def test_scenario_b_concurrent(pending_job, fake_llm):
             errors.append(e)
     t1 = threading.Thread(target=run_worker)
     t2 = threading.Thread(target=run_worker)
+    fake_llm.delay = 0.5
     t1.start()
     t2.start()
     t1.join()

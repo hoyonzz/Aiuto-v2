@@ -1,6 +1,7 @@
 import os
 os.environ["POSTGRES_DB"] = "aiuto_test"
 
+import time
 import pytest
 from alembic.config import Config
 from alembic import command
@@ -46,10 +47,12 @@ def pending_job(clean_db):
 class FakeLLMClient:
     def __init__(self):
         self.calls = 0
+        self.delay = 0
 
     def classify(self, prompt, now_iso, timezone):
         self.calls += 1
         result = ClassificationResult(intent="memo", confidence=0.9, extracted=ExtractedData(content=prompt), model_used="fake")
+        time.sleep(self.delay)
         return result
 
 @pytest.fixture
